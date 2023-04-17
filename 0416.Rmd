@@ -1,0 +1,94 @@
+---
+title: "Untitled"
+output: html_document
+date: "2023-04-15"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+setwd("/Users/zhenhaoan/Desktop/DS project/CMU_courses_19603_project")
+```
+
+```{r zip_code}
+zip <- read_csv(paste0(getwd(),"/dataset/ZIP_to_tract/ZIP_TRACT.csv"))
+acsd <- read_csv(paste0(getwd(),"/dataset/NYC_tract_income/ACSDT5Y2015.B19001-Data.csv"))
+nyc <- read_csv(paste0(getwd(),"/dataset/NYCBuildingEnergyUse/nyc_benchmarking_disclosure_data_reported_in_2016.csv"))
+zip
+acsd
+nyc
+```
+```{r zip_code}
+#change the column
+library(dplyr)
+
+acsd_zip <- acsd %>%
+  select(GEO_ID) %>%
+  mutate(zip_id = substr(GEO_ID, start = 10, stop = nchar(GEO_ID)))
+
+acsd_zip
+```
+```{r zip_code}
+#change the column
+library(dplyr)
+acsd_zip <- acsd %>%
+  mutate(zip_id = substr(GEO_ID, start = 10, stop = nchar(GEO_ID)))
+acsd_zip
+
+#add zip column into the acsd table
+new_acsd <- merge(ZIP_TRACT, acsd_zip, by.x = "tract", by.y = "zip_id")
+new_acsd
+
+#combine the block data and census data together so that we can compare for example the relation between income and consumption
+block_data <- merge(nyc_benchmarking_disclosure_data_reported_in_2016, new_acsd, by.x = "Zip Code", by.y = "zip")
+block_data
+```
+
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+```{r}
+library(tidyverse)
+setwd("/Users/zhenhaoan/Desktop/DS project/CMU_courses_19603_project")
+block <- read_csv(paste0(getwd(),"/dataset/NYC_Building_Energy_with_GEOID/table.csv"))
+bureau <- read_csv(paste0(getwd(),"/dataset/NYC_tract_income/ACSDT5Y2015.B19001-Data.csv"))
+block
+bureau
+```
+```{r}
+#estimate the income of each family
+bureau <- bureau %>%
+  mutate(zip_id = substr(GEO_ID, start = 10, stop = nchar(GEO_ID))) %>%
+  mutate(bureau, income = (B19001_002E * 5000 + B19001_003E * 12500 + B19001_004E * 17500 + B19001_005E * 22500 + B19001_006E * 27500 + B19001_007E * 32500 + B19001_008E * 37500 + B19001_009E * 42500 + B19001_010E * 47500 + B19001_011E * 55000 + B19001_012E * 67500 + B19001_013E * 87500 + B19001_014E * 112500 + B19001_015E * 137500 + B19001_016E * 175000 + B19001_017E * 200000)/B19001_001E)
+bureau
+```
+```{r}
+#join the block and bureau tables into one
+merged<- merge(block, bureau, by.x = "GEOID10", by.y = "zip_id", all = FALSE)
+
+#income_consump <- select(merged, 
+ # income, 
+#)
+
+```
+```{r}
+data.frame(merged)
+
+```
